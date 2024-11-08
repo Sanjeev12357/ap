@@ -1,0 +1,118 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+
+string ltrim(const string &);
+string rtrim(const string &);
+vector<string> split(const string &);
+
+// Complete the evenForest function below.
+int evenForest(int t_nodes, int t_edges, vector<int> t_from, vector<int> t_to) {
+    // Build the adjacency list
+    vector<vector<int>> adj(t_nodes + 1);
+    for (int i = 0; i < t_edges; ++i) {
+        adj[t_from[i]].push_back(t_to[i]);
+        adj[t_to[i]].push_back(t_from[i]);
+    }
+
+    // Vector to store the count of nodes in each subtree
+    vector<int> subtree_node_count(t_nodes + 1, 0);
+    int removable_edges = 0;
+
+    // DFS function to count nodes in each subtree
+    function<int(int, int)> dfs = [&](int node, int parent) {
+        subtree_node_count[node] = 1; // Count the node itself
+        for (int neighbor : adj[node]) {
+            if (neighbor != parent) { // Avoid going back to parent
+                subtree_node_count[node] += dfs(neighbor, node);
+            }
+        }
+        // If the subtree rooted at this node has an even number of nodes, count it as removable
+        if (node != 1 && subtree_node_count[node] % 2 == 0) {
+            removable_edges++;
+        }
+        return subtree_node_count[node];
+    };
+
+    // Start DFS from the root node (assuming node 1 as root)
+    dfs(1, -1);
+
+    return removable_edges;
+}
+
+
+int main()
+{
+    ofstream fout(getenv("OUTPUT_PATH"));
+
+    string t_nodes_edges_temp;
+    getline(cin, t_nodes_edges_temp);
+
+    vector<string> t_nodes_edges = split(rtrim(t_nodes_edges_temp));
+
+    int t_nodes = stoi(t_nodes_edges[0]);
+    int t_edges = stoi(t_nodes_edges[1]);
+
+    vector<int> t_from(t_edges);
+    vector<int> t_to(t_edges);
+
+    for (int i = 0; i < t_edges; i++) {
+        string t_from_to_temp;
+        getline(cin, t_from_to_temp);
+
+        vector<string> t_from_to = split(rtrim(t_from_to_temp));
+
+        int t_from_temp = stoi(t_from_to[0]);
+        int t_to_temp = stoi(t_from_to[1]);
+
+        t_from[i] = t_from_temp;
+        t_to[i] = t_to_temp;
+    }
+
+    int res = evenForest(t_nodes, t_edges, t_from, t_to);
+
+    fout << res << "\n";
+
+    fout.close();
+
+    return 0;
+}
+
+string ltrim(const string &str) {
+    string s(str);
+
+    s.erase(
+        s.begin(),
+        find_if(s.begin(), s.end(), not1(ptr_fun<int, int>(isspace)))
+    );
+
+    return s;
+}
+
+string rtrim(const string &str) {
+    string s(str);
+
+    s.erase(
+        find_if(s.rbegin(), s.rend(), not1(ptr_fun<int, int>(isspace))).base(),
+        s.end()
+    );
+
+    return s;
+}
+
+vector<string> split(const string &str) {
+    vector<string> tokens;
+
+    string::size_type start = 0;
+    string::size_type end = 0;
+
+    while ((end = str.find(" ", start)) != string::npos) {
+        tokens.push_back(str.substr(start, end - start));
+
+        start = end + 1;
+    }
+
+    tokens.push_back(str.substr(start));
+
+    return tokens;
+}
